@@ -1,26 +1,34 @@
+import sys
+import os
 import sqlite3
 from tkinter import *
 from tkinter import ttk, messagebox as mb
 
-root = Tk()
-root.title("Library Management System")
-root.state("zoomed")  # Full screen
+# ---------- Paths for EXE compatibility ----------
+if getattr(sys, 'frozen', False):
+    base_path = sys._MEIPASS  # PyInstaller temp folder
+else:
+    base_path = os.path.dirname(__file__)
+
+db_path = os.path.join(base_path, 'library.db')
 
 # ---------- Database Setup ----------
-conn = sqlite3.connect('library.db')
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
-cursor.execute('DROP TABLE IF EXISTS Library')
 cursor.execute('''
-    CREATE TABLE Library (
+    CREATE TABLE IF NOT EXISTS Library (
         BK_ID TEXT PRIMARY KEY,
         BK_NAME TEXT,
         AUTHOR_NAME TEXT
     )
 ''')
 
-books_data = [
-    ("BK001", "To Kill a Mockingbird", "Harper Lee"),
+# Optional: Pre-populate data if table is empty
+cursor.execute('SELECT COUNT(*) FROM Library')
+if cursor.fetchone()[0] == 0:
+    books_data = [
+         ("BK001", "To Kill a Mockingbird", "Harper Lee"),
     ("BK002", "1984", "George Orwell"),
     ("BK003", "Pride and Prejudice", "Jane Austen"),
     ("BK004", "The Great Gatsby", "F. Scott Fitzgerald"),
@@ -70,10 +78,9 @@ books_data = [
     ("BK048", "Operating System Concepts", "Abraham Silberschatz"),
     ("BK049", "Database System Concepts", "Abraham Silberschatz"),
     ("BK050", "Modern Operating Systems", "Andrew S. Tanenbaum"),
-]
-
-for book in books_data:
-    cursor.execute('INSERT OR IGNORE INTO Library VALUES (?, ?, ?)', (book[0], book[1], book[2]))
+    ]
+    for book in books_data:
+        cursor.execute('INSERT OR IGNORE INTO Library VALUES (?, ?, ?)', book)
 conn.commit()
 
 # ---------- Functions ----------
@@ -140,17 +147,20 @@ def search_record():
         tree.insert('', END, values=record)
 
 # ---------- GUI ----------
+root = Tk()
+root.title("Library Management System")
+root.state("zoomed")  # Full screen
+
 # Colors
 bg_color = "#f0f0f0"
 frame_color = "#e6e6e6"
 button_color = "#607d8b"
-button_hover = "#455a64"
-title_color = "#37474f"
 tree_color = "#eceff1"
+title_color = "#37474f"
 
 root.configure(bg=bg_color)
-
-Label(root, text="Library Management System", font=('Arial', 28, 'bold'), bg=title_color, fg="white").pack(side=TOP, fill=X)
+Label(root, text="Library Management System", font=('Arial', 28, 'bold'),
+      bg=title_color, fg="white").pack(side=TOP, fill=X)
 
 frame = Frame(root, bg=frame_color)
 frame.pack(fill=BOTH, expand=True, padx=20, pady=20)
