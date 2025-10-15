@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: library-management
+    env: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
